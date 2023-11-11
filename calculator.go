@@ -6,6 +6,7 @@ import (
     "os"
     "strconv"
     "strings"
+    "unicode"
 )
 
 var (
@@ -37,6 +38,17 @@ func GetIndex[T comparable](s []T, e T) int {
     return -1
 }
 
+func InputClear(input string) string {
+
+    cleanInput := strings.Map(func(r rune) rune {
+       if unicode.IsPrint(r) {
+          return r
+       }
+       return -1
+    }, input)
+    return cleanInput
+}
+
 func InputParse(input string) (string, []string, error) {
     var operator string
     var count int
@@ -50,12 +62,11 @@ func InputParse(input string) (string, []string, error) {
     if operator == "" {
        return "", nil, fmt.Errorf("введённая строка не является математической операцией")
     }
-
     if count > 1 {
        return "", nil, fmt.Errorf("калькулятор работает только для одного оператора. Вы ввели %v", count)
+
     }
 
-    input = strings.Trim(input, " \r\n")
     numbers := strings.Split(input, operator)
 
     if Contains(acceptableArabic, numbers[0]) && Contains(acceptableArabic, numbers[1]) {
@@ -113,20 +124,27 @@ func ArabicToRoman(str string) string {
 }
 
 func main() {
-    fmt.Print("Введите выражение: ")
-    in := bufio.NewReader(os.Stdin)
-    input, _ := in.ReadString('\n')
-    input = strings.ReplaceAll(input, " ", "")
-    operator, args, err := InputParse(input)
-    if err == nil {
-       if args[2] == "a" {
-          fmt.Printf("Результат: %v\n", CalculateArabic(operator, args[0], args[1]))
-       } else if args[2] == "r" {
-          result := CalculateRoman(operator, args[0], args[1])
-          resultString := strconv.Itoa(result)
-          fmt.Printf("Результат: %v\n", ArabicToRoman(resultString))
+    for {
+       fmt.Print("Введите выражение (или 'q' для выхода из программы): ")
+       in := bufio.NewReader(os.Stdin)
+       input, _ := in.ReadString('\n')
+       input = InputClear(input)
+       if input == "q" {
+          break
        }
-    } else {
-       fmt.Println("Ошибка:", err)
+       input = strings.ReplaceAll(input, " ", "")
+       operator, args, err := InputParse(input)
+       if err == nil {
+          if args[2] == "a" {
+             fmt.Printf("Результат: %v\n", CalculateArabic(operator, args[0], args[1]))
+          } else if args[2] == "r" {
+             result := CalculateRoman(operator, args[0], args[1])
+             resultString := strconv.Itoa(result)
+             fmt.Printf("Результат: %v\n", ArabicToRoman(resultString))
+          }
+       } else {
+          fmt.Println("Ошибка:", err)
+          break
+       }
     }
 }
